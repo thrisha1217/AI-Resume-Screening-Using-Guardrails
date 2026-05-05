@@ -1,4 +1,5 @@
-const BASE = 'http://localhost:8000';
+// Uses VITE_API_URL env var in production, falls back to localhost for dev
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export async function submitScreening(
   requirements: File,

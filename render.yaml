@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: resume-screening-api
+    env: python
+    buildCommand: |
+      pip install -r requirements.txt
+      python -c "import nltk; nltk.download('punkt_tab')"
+      guardrails hub install hub://guardrails/toxic_language --quiet
+      guardrails hub install hub://guardrails/nsfw_text --quiet
+      guardrails hub install hub://guardrails/guardrails_pii --quiet
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: HF_HUB_DISABLE_SYMLINKS_WARNING
+        value: "1"
+    plan: standard

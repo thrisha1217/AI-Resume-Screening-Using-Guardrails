@@ -32,6 +32,8 @@ screening_results.zip
 
 # Node / React
 frontend/node_modules/
+node_modules/
+**/node_modules/
 frontend/dist/
 frontend/.env
 
@@ -46,3 +48,5 @@ Thumbs.db
 # Secrets / env
 .env
 *.env
+frontend/.env
+frontend/.env.local
