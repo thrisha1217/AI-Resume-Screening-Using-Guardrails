@@ -1,0 +1,48 @@
+# Exclude large data folders
+All Required Files/
+temp_resumes/
+temp_pdfs/
+temp_introductions/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+env312/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+venv/
+env312/
+
+# FAISS index files (regenerated at runtime)
+requirements_index.faiss
+requirements_chunks.pkl
+
+# Output files
+spe_da_screening_output.xlsx
+screening_results.zip
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Secrets / env
+.env
+*.env

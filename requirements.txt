@@ -1,0 +1,12 @@
+streamlit
+pandas
+python-docx
+PyPDF2
+nltk
+faiss-cpu
+numpy
+langchain-core
+langchain-community
+sentence-transformers
+guardrails-ai
+fpdf
