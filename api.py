@@ -24,7 +24,7 @@ import docx
 import nltk
 from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
-from langchain_groq import ChatGroq
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import PromptTemplate
 from guardrails.hub import ToxicLanguage, NSFWText, GuardrailsPII
 from guardrails import Guard
@@ -51,14 +51,7 @@ app.add_middleware(
 # ── Global model (loaded once) ────────────────────────────────────────────────
 print("Loading SentenceTransformer model...")
 model = SentenceTransformer('all-MiniLM-L6-v2')
-
-# Groq LLM — reads GROQ_API_KEY from environment variable
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-llm = ChatGroq(
-    model="llama3-8b-8192",
-    api_key=GROQ_API_KEY,
-    temperature=0.1,
-)
+llm   = ChatOllama(model="llama3.2")
 print("Models loaded.")
 
 # ── In-memory job store ───────────────────────────────────────────────────────

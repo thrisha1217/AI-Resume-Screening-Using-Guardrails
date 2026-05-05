@@ -30,13 +30,13 @@ An AI-powered resume screening web application that automatically evaluates job 
 ├── spe_da_screening.py     # Standalone screening script
 ├── requirements.txt        # Python dependencies
 ├── .streamlit/
-│   └── config.toml         # Streamlit server config (1GB upload limit)
+│   └── config.toml         # Streamlit server config
 └── frontend/               # React + TypeScript UI
     ├── src/
     │   ├── App.tsx
-    │   ├── api.ts           # API calls to FastAPI backend
-    │   ├── types.ts         # TypeScript interfaces
-    │   ├── index.css        # Global styles
+    │   ├── api.ts
+    │   ├── types.ts
+    │   ├── index.css
     │   └── pages/
     │       ├── HomePage.tsx
     │       ├── UploadPage.tsx
@@ -51,21 +51,23 @@ An AI-powered resume screening web application that automatically evaluates job 
 ## Features
 
 ### 6-Stage Screening Pipeline
+
 Each candidate goes through these checks in order — stops at first failure:
 
-1. **Degree Validation** — BE/BTech/ME/MTech/MCA/MSc in tech field. Falls back to resume PDF if Excel is unclear.
-2. **Specialisation Validation** — CSE/IT/ECE/Computer Application/Data Science/AI/ML. Falls back to resume PDF.
+1. **Degree Validation** — Checks for valid technical degrees (BE/BTech/ME/MTech/MCA/MSc). Falls back to resume PDF if Excel data is unclear.
+2. **Specialisation Validation** — Checks for relevant fields (CSE/IT/ECE/Computer Application/Data Science/AI/ML). Falls back to resume PDF.
 3. **Percentage Check** — Minimum 60% required.
-4. **Experience Check** — Minimum 4 years required. Falls back to resume PDF.
-5. **Organisation Rules** — Government employees and CDAC employees need NOC. CDAC employees need minimum 3 years at CDAC.
-6. **Cosine Similarity** — Candidate skills/profile vs job requirements using FAISS vector search. Threshold: 0.2.
+4. **Experience Check** — Minimum required years of experience. Falls back to resume PDF.
+5. **Organisation Rules** — Government employees need NOC. CDAC employees need minimum experience at CDAC.
+6. **Cosine Similarity** — Candidate skills/profile vs job requirements using FAISS vector search.
 
 ### AI Features (requires Ollama)
-- **Degree Extraction** — Llama 3.2 reads raw resume text and extracts degree names
-- **Org Check** — LLM determines if an organization is a government body in India
-- **Candidate Introduction** — LLM generates a 2-paragraph professional summary per candidate
+- **Degree Extraction** — LLM reads raw resume text and extracts degree names
+- **Organisation Check** — LLM determines if an organization is a government body
+- **Candidate Introduction** — LLM generates a professional 2-paragraph summary per candidate
 
 ### Guardrails Safety
+
 Every LLM output is validated before use:
 
 | Validator | Checks | Action |
@@ -116,7 +118,7 @@ npm install
 
 ## Running the Application
 
-### Option A — React + FastAPI (Recommended)
+### Option A — React + FastAPI
 
 **Terminal 1 — Start FastAPI backend:**
 ```bash
@@ -145,17 +147,17 @@ Open **http://localhost:8501**
 
 ## How to Use
 
-1. **Home Page** — Click **"Analyze Resumes"**
-2. **Upload Page** — Upload 3 files:
-   - Requirements Document (PDF/DOCX/TXT) — job description
-   - Candidate Excel (.xlsx) — candidate database
-   - Resume Folder (.zip) — all candidate resume PDFs
+1. Click **"Analyze Resumes"** on the home page
+2. Upload 3 files:
+   - **Requirements Document** (PDF/DOCX/TXT) — job description with eligibility criteria
+   - **Candidate Excel** (.xlsx) — candidate database
+   - **Resume Folder** (.zip) — all candidate resume PDFs
 3. Click **"Start Screening"**
-4. **Results Page** — View:
+4. View results:
    - Summary cards (Screened In / Out / Manual Check / Total)
-   - Tabs to browse each group with candidate details
-   - Click **View** on any candidate to see full profile, AI introduction, and guardrails log
-   - **Guardrails Report** tab shows all validators used and activity log
+   - Browse each group with full candidate details
+   - Click **View** on any candidate to see profile, AI introduction, and guardrails log
+   - **Guardrails Report** tab shows all validators and activity log
    - Download ZIP with colour-coded Excel + candidate PDFs
 
 ---
@@ -179,8 +181,8 @@ The system auto-detects column names. Supported variants:
 ### Resume ZIP
 Name resume files with the Applicant ID in the filename:
 ```
-482845_Yogesh_Kumar.pdf
-484764_Katravulapalli_Sravani.pdf
+123456_Candidate_Name.pdf
+789012_Another_Candidate.pdf
 ```
 
 ---
@@ -188,8 +190,7 @@ Name resume files with the Applicant ID in the filename:
 ## Output
 
 The downloaded ZIP contains:
-- `screening_results.xlsx` — colour-coded Excel (🟢 green = in, 🔴 red = out, 🟡 yellow = manual)
-- `full_data.xlsx` — complete raw data
+- `screening_results.xlsx` — colour-coded Excel (green = Screened In, red = Screened Out, yellow = Manual Check)
 - `profiles/` — PDF profile card per candidate
 
 ---
