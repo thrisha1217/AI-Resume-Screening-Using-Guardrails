@@ -1,4 +1,5 @@
-// Uses VITE_API_URL env var in production, falls back to localhost for dev
+// In production (Docker/AWS), nginx proxies /api/* to the backend.
+// In local dev, falls back to localhost:8000.
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export async function submitScreening(

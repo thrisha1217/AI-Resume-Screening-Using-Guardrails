@@ -1,0 +1,10 @@
+# Copy this file to terraform.tfvars and fill in your values
+# cp terraform.tfvars.example terraform.tfvars
+
+aws_region       = "ap-south-1"
+app_name         = "resume-screening"
+instance_type    = "t3.xlarge"        # 4 vCPU, 16GB RAM — needed for Qwen2.5:3B
+key_pair_name    = "your-key-pair"    # Must exist in AWS EC2 console
+domain_name      = "resume.yourdomain.com"
+hosted_zone_name = "yourdomain.com"   # Must exist in Route53
+ssh_allowed_cidr = "YOUR_IP/32"       # Your IP for SSH access

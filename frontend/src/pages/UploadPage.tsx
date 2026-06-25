@@ -46,7 +46,7 @@ export default function UploadPage({ onResults, onBack }: Props) {
             if (s.status === 'done') { clearInterval(iv); resolve(); }
             else if (s.status === 'error') { clearInterval(iv); reject(new Error(s.error || 'Failed')); }
           } catch (e) { clearInterval(iv); reject(e); }
-        }, 1500);
+        }, 800); // poll every 800ms for smooth progress bar
       });
       setStatusMsg('Fetching results...');
       const results = await getResults(jobId);

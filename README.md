@@ -1,212 +1,195 @@
-# AI Resume Screening System Using Guardrails
+# Resume Screening System
 
-An AI-powered resume screening web application that automatically evaluates job applicants and decides who should be called for an interview — replacing manual HR screening.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | React 19 + TypeScript + Vite |
-| Backend API | FastAPI + Uvicorn |
-| Streamlit App | Python + Streamlit (alternative UI) |
-| LLM | Llama 3.2 via Ollama (runs locally) |
-| Embeddings | SentenceTransformer (all-MiniLM-L6-v2) |
-| Vector Search | FAISS (Facebook AI Similarity Search) |
-| Safety | Guardrails AI (ToxicLanguage, NSFWText, GuardrailsPII) |
-| Data | Pandas, OpenPyXL |
-| PDF Generation | FPDF |
-| Resume Parsing | PyPDF2, python-docx |
+AI-powered resume screening with LLM-based candidate evaluation, skill matching, and guardrails safety.
 
 ---
 
-## Project Structure
+## Architecture
 
 ```
-├── api.py                  # FastAPI backend (REST API for React frontend)
-├── main.py                 # Streamlit app (alternative UI)
-├── new_theme.py            # UI theme constants for Streamlit
-├── spe_da_screening.py     # Standalone screening script
-├── requirements.txt        # Python dependencies
-├── .streamlit/
-│   └── config.toml         # Streamlit server config
-└── frontend/               # React + TypeScript UI
-    ├── src/
-    │   ├── App.tsx
-    │   ├── api.ts
-    │   ├── types.ts
-    │   ├── index.css
-    │   └── pages/
-    │       ├── HomePage.tsx
-    │       ├── UploadPage.tsx
-    │       └── ResultsPage.tsx
-    ├── index.html
-    ├── vite.config.ts
-    └── package.json
+Internet
+    │
+    ▼
+Route53 DNS (resume.yourdomain.com)
+    │
+    ▼
+EC2 Instance (t3.xlarge)
+    │
+    ├── Nginx (port 80/443)
+    │       ├── /          → React Frontend (built static files)
+    │       └── /api/*     → FastAPI Backend (port 8000)
+    │
+    ├── FastAPI Backend (port 8000)
+    │       └── Qwen2.5:3B via Ollama (port 11434)
+    │
+    └── Ollama (port 11434)
+            └── qwen2.5:3b model
 ```
 
 ---
 
-## Features
+## Local Development
 
-### 6-Stage Screening Pipeline
+```bash
+# Start backend
+python -m uvicorn api:app --host 0.0.0.0 --port 8000
 
-Each candidate goes through these checks in order — stops at first failure:
-
-1. **Degree Validation** — Checks for valid technical degrees (BE/BTech/ME/MTech/MCA/MSc). Falls back to resume PDF if Excel data is unclear.
-2. **Specialisation Validation** — Checks for relevant fields (CSE/IT/ECE/Computer Application/Data Science/AI/ML). Falls back to resume PDF.
-3. **Percentage Check** — Minimum 60% required.
-4. **Experience Check** — Minimum required years of experience. Falls back to resume PDF.
-5. **Organisation Rules** — Government employees need NOC. CDAC employees need minimum experience at CDAC.
-6. **Cosine Similarity** — Candidate skills/profile vs job requirements using FAISS vector search.
-
-### AI Features (requires Ollama)
-- **Degree Extraction** — LLM reads raw resume text and extracts degree names
-- **Organisation Check** — LLM determines if an organization is a government body
-- **Candidate Introduction** — LLM generates a professional 2-paragraph summary per candidate
-
-### Guardrails Safety
-
-Every LLM output is validated before use:
-
-| Validator | Checks | Action |
-|---|---|---|
-| **ToxicLanguage** | Hate speech, offensive language | Rejects output |
-| **NSFWText** | Inappropriate content | Rejects output |
-| **GuardrailsPII** | Phone numbers, email addresses | Auto-removes PII |
+# Start frontend
+cd frontend && npm run dev
+# Open http://localhost:5173
+```
 
 ---
 
-## Setup & Installation
+## Docker (Local)
+
+```bash
+# Build and start all services
+docker compose up --build
+
+# Open http://localhost
+```
+
+---
+
+## AWS Deployment — Step by Step
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- [Ollama](https://ollama.com/download) installed and running
+- AWS account with CLI configured (`aws configure`)
+- Terraform installed (`terraform -v`)
+- A domain registered in Route53 (or transfer your domain)
+- An EC2 key pair created in AWS console
 
-### 1. Clone the repository
+### Step 1 — Configure Terraform
+
 ```bash
-git clone https://github.com/thrisha1217/AI-Resume-Screening-Using-Guardrails.git
-cd AI-Resume-Screening-Using-Guardrails
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
 ```
 
-### 2. Install Python dependencies
+### Step 2 — Provision AWS Infrastructure
+
 ```bash
-pip install -r requirements.txt
+cd terraform
+terraform init
+terraform plan
+terraform apply
+# Note the output: public_ip and app_url
 ```
 
-### 3. Install Guardrails validators
+This creates:
+- VPC + subnet + internet gateway
+- Security group (ports 80, 443, 22)
+- EC2 t3.xlarge instance (Ubuntu 22.04)
+- Elastic IP
+- Route53 A record → your domain
+
+### Step 3 — Copy Code to EC2
+
 ```bash
-guardrails hub install hub://guardrails/toxic_language
-guardrails hub install hub://guardrails/nsfw_text
-guardrails hub install hub://guardrails/guardrails_pii
+# SSH into the instance
+ssh -i your-key.pem ubuntu@<PUBLIC_IP>
+
+# On the EC2 instance:
+sudo mkdir -p /opt/resume-screening
+sudo chown ubuntu:ubuntu /opt/resume-screening
+
+# Option A: Clone from GitHub
+git clone https://github.com/YOUR_USERNAME/resume-screening.git /opt/resume-screening
+
+# Option B: Copy files via SCP (from your local machine)
+scp -i your-key.pem -r . ubuntu@<PUBLIC_IP>:/opt/resume-screening/
 ```
 
-### 4. Pull the LLM model
+### Step 4 — Deploy
+
 ```bash
-ollama pull llama3.2
+# On EC2:
+cd /opt/resume-screening
+bash deploy.sh
 ```
 
-### 5. Install frontend dependencies
+This will:
+1. Build Docker images
+2. Start all containers (Ollama, Backend, Frontend/Nginx)
+3. Pull the qwen2.5:3b model (~2GB)
+4. Run health checks
+
+### Step 5 — Enable HTTPS (Let's Encrypt)
+
 ```bash
-cd frontend
-npm install
+# On EC2 (after DNS propagates ~5 min):
+sudo certbot --nginx -d resume.yourdomain.com
+
+# Auto-renewal
+sudo systemctl enable certbot.timer
 ```
+
+Then update `nginx.conf` to redirect HTTP → HTTPS (uncomment the redirect block).
 
 ---
 
-## Running the Application
+## CI/CD (GitHub Actions)
 
-### Option A — React + FastAPI
+Add these secrets to your GitHub repository:
 
-**Terminal 1 — Start FastAPI backend:**
-```bash
-python -m uvicorn api:app --host 0.0.0.0 --port 8000 --reload
-```
-
-**Terminal 2 — Start React frontend:**
-```bash
-cd frontend
-npm run dev
-```
-
-Open **http://localhost:5173**
-
----
-
-### Option B — Streamlit App
-
-```bash
-python -m streamlit run main.py
-```
-
-Open **http://localhost:8501**
-
----
-
-## How to Use
-
-1. Click **"Analyze Resumes"** on the home page
-2. Upload 3 files:
-   - **Requirements Document** (PDF/DOCX/TXT) — job description with eligibility criteria
-   - **Candidate Excel** (.xlsx) — candidate database
-   - **Resume Folder** (.zip) — all candidate resume PDFs
-3. Click **"Start Screening"**
-4. View results:
-   - Summary cards (Screened In / Out / Manual Check / Total)
-   - Browse each group with full candidate details
-   - Click **View** on any candidate to see profile, AI introduction, and guardrails log
-   - **Guardrails Report** tab shows all validators and activity log
-   - Download ZIP with colour-coded Excel + candidate PDFs
-
----
-
-## Input File Format
-
-### Excel File
-The system auto-detects column names. Supported variants:
-
-| Field | Accepted column names |
+| Secret | Value |
 |---|---|
-| Applicant ID | applicantid, candidateid, applicationid |
-| Full Name | fullname, name, candidatename |
-| Degree | degree, qualification, education |
-| Specialisation | specialisation, specialization, branch, stream |
-| Percentage | percentage, percent, marks, cgpa, gpa |
-| Experience | totalexperience, experience, experienceyears |
-| Skills | skills, skill, technicalskills, expertise |
-| Organization | organization, organisation, company, employer |
+| `AWS_ACCESS_KEY_ID` | Your AWS access key |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret key |
+| `EC2_HOST` | EC2 public IP or domain |
+| `EC2_SSH_KEY` | Contents of your .pem file |
 
-### Resume ZIP
-Name resume files with the Applicant ID in the filename:
-```
-123456_Candidate_Name.pdf
-789012_Another_Candidate.pdf
-```
+Every push to `main` will automatically build and deploy.
 
 ---
 
-## Output
+## Environment Variables
 
-The downloaded ZIP contains:
-- `screening_results.xlsx` — colour-coded Excel (green = Screened In, red = Screened Out, yellow = Manual Check)
-- `profiles/` — PDF profile card per candidate
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Description |
+| Variable | Default | Description |
 |---|---|---|
-| POST | `/api/screen` | Submit files for screening, returns `job_id` |
-| GET | `/api/status/{job_id}` | Poll screening progress |
-| GET | `/api/results/{job_id}` | Get full screening results |
-| GET | `/api/download/{job_id}` | Download results ZIP |
-| GET | `/api/health` | Health check |
+| `OLLAMA_HOST` | `http://ollama:11434` | Ollama server URL |
+| `VITE_API_URL` | `/api` | Frontend API base URL |
+| `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION` | `python` | Fix protobuf conflict |
 
 ---
 
-## License
+## Useful Commands
 
-MIT License
+```bash
+# View logs
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f ollama
+
+# Restart a service
+docker compose restart backend
+
+# Check running containers
+docker compose ps
+
+# Stop everything
+docker compose down
+
+# Pull new model
+docker compose exec ollama ollama pull qwen2.5:3b
+
+# SSH tunnel to access backend directly
+ssh -L 8000:localhost:8000 -i your-key.pem ubuntu@<PUBLIC_IP>
+```
+
+---
+
+## Cost Estimate (AWS ap-south-1)
+
+| Resource | Cost/month |
+|---|---|
+| EC2 t3.xlarge | ~$60 |
+| EBS 50GB gp3 | ~$4 |
+| Elastic IP | ~$3.6 |
+| Route53 hosted zone | ~$0.5 |
+| Data transfer | ~$1 |
+| **Total** | **~$69/month** |
+
+> Use `t3.large` (2vCPU/8GB) to reduce cost to ~$45/month — may be slower for LLM inference.
