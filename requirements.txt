@@ -8,9 +8,9 @@ PyPDF2==3.0.1
 nltk==3.8.1
 faiss-cpu==1.7.4
 numpy==1.26.4
-langchain-core==0.3.29
-langchain-community==0.3.13
-langchain-ollama==0.3.0
+langchain-core
+langchain-community
+langchain-ollama
 sentence-transformers==2.7.0
 guardrails-ai==0.5.10
 fpdf==1.7.2
