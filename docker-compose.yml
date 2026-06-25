@@ -14,9 +14,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+      timeout: 15s
+      retries: 10
+      start_period: 120s
 
   # ── Ollama model pull (runs once, then exits) ──────────────────────────────
   ollama-pull:
@@ -54,7 +54,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 180s
 
   # ── React Frontend (Nginx) ─────────────────────────────────────────────────
   frontend:
